@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Interview Mode</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+<div class="app-container">
+
+    <!-- Sidebar -->
+
+    <div class="sidebar">
+
+        <h2>🎤 IntelliPrep</h2>
+
+        <a href="/">💬 Chatbot</a>
+
+        <a href="/interview">🧠 Interview Mode</a>
+
+        <a href="/clear">🗑️ Clear Chat</a>
+
+    </div>
+
+    <!-- Main Area -->
+
+    <div class="chat-container">
+
+        <div class="chat-header">
+
+            <h1>Interview Practice</h1>
+
+            <p>Select category and improve your answers.</p>
+
+        </div>
+
+        <!-- Category Selection -->
+
+        <form method="POST" style="padding:20px;">
+
+            <select name="category" onchange="this.form.submit()" class="category-select">
+
+                {% for category in categories %}
+
+                <option 
+                    value="{{ category }}"
+                    {% if category == selected_category %}selected{% endif %}
+                >
+                    {{ category }}
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+        </form>
+
+        <div class="chat-box">
+
+            <div class="bot-wrapper">
+
+                <div class="avatar">🤖</div>
+
+                <div class="message bot-message">
+
+                    {{ question }}
+
+                </div>
+
+            </div>
+
+            {% if feedback %}
+
+            <div class="bot-wrapper">
+
+                <div class="avatar">📋</div>
+
+                <div class="message bot-message">
+
+                    {{ feedback }}
+
+                </div>
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+        <form method="POST" class="input-area">
+
+            <input 
+                type="text"
+                name="answer"
+                placeholder="Type your answer..."
+                required
+            >
+
+            <button type="submit">Submit</button>
+
+        </form>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>

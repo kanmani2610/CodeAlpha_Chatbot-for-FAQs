@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AI Interview Simulator</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+<div class="app-container">
+
+    <!-- Sidebar -->
+
+    <div class="sidebar">
+
+        <h2>🎤 IntelliPrep</h2>
+
+        <a href="/">💬 Chatbot</a>
+
+        <a href="/interview">🧠 Interview Mode</a>
+        
+        <a href="/clear">🗑️ Clear Chat</a>
+
+    </div>
+
+    <!-- Main Chat Area -->
+
+    <div class="chat-container">
+
+        <div class="chat-header">
+
+            <h1>AI Interview Assistant</h1>
+
+            <p>Practice technical interview questions smarter.</p>
+
+        </div>
+
+        <div class="chat-box" id="chat-box">
+
+            {% for chat in chats %}
+
+            <div class="user-wrapper">
+
+                <div class="message user-message">
+                    {{ chat.user }}
+                </div>
+
+                <div class="avatar user-avatar">
+                    👨‍💻
+                </div>
+
+            </div>
+
+            <div class="bot-wrapper">
+
+                <div class="avatar">
+                    🤖
+                </div>
+
+                <div class="message bot-message">
+                    {{ chat.bot }}
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        <form method="POST" class="input-area">
+
+            <input 
+                type="text"
+                name="message"
+                placeholder="Ask interview-related questions..."
+                required
+            >
+
+            <button type="submit">Send</button>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+
+    const chatBox = document.getElementById("chat-box");
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+</script>
+
+</body>
+
+</html>
