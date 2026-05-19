@@ -15,7 +15,7 @@ from fuzzywuzzy import process as fuzzy_process
 
 from interview_data import categories
 
-# ── Download NLTK data ────────────────────────────────────────────────────────
+
 nltk.download('punkt')
 nltk.download('punkt_tab')
 nltk.download('stopwords')
@@ -23,13 +23,13 @@ nltk.download('wordnet')
 
 app = Flask(__name__)
 
-# ── Load FAQ data ─────────────────────────────────────────────────────────────
-data = pd.read_csv("faq.csv")
+
+data = pd.read_csv("faq.csv", on_bad_lines='skip')
 
 questions = data['question'].tolist()
 answers   = data['answer'].tolist()
 
-# ── NLP helpers ───────────────────────────────────────────────────────────────
+
 lemmatizer = WordNetLemmatizer()
 stop_words = set(stopwords.words('english'))
 
@@ -43,24 +43,24 @@ def correct_spelling(text):
 def preprocess(text):
     """Lowercase → spell-correct → tokenize → remove stopwords/punct → lemmatize."""
     text   = text.lower()
-    text   = correct_spelling(text)              # ← handles typos like 'plymorphism'
+    text   = correct_spelling(text)             
     tokens = word_tokenize(text)
     tokens = [
-        lemmatizer.lemmatize(word)               # ← 'classes' → 'class', 'methods' → 'method'
+        lemmatizer.lemmatize(word)            
         for word in tokens
         if word not in stop_words
         and word not in string.punctuation
-        and word.isalpha()                       # ← strips numbers & special chars
+        and word.isalpha()                      
     ]
     return " ".join(tokens)
 
-# ── Build TF-IDF vectors ──────────────────────────────────────────────────────
+
 processed_questions = [preprocess(q) for q in questions]
 
-vectorizer       = TfidfVectorizer(ngram_range=(1, 2))   # ← bigrams improve matching
+vectorizer       = TfidfVectorizer(ngram_range=(1, 2))   
 question_vectors = vectorizer.fit_transform(processed_questions)
 
-# ── Chatbot response function ─────────────────────────────────────────────────
+
 def get_response(user_input):
     """
     1. Preprocess & spell-correct the input.
@@ -70,11 +70,11 @@ def get_response(user_input):
     """
 
     if not user_input or not user_input.strip():
-        return "Please type a question so I can help you! 😊"
+        return "Please type a question so I can help you! "
 
     processed_input = preprocess(user_input)
 
-    # ── Step 1: TF-IDF cosine similarity ──────────────────────────────────────
+    
     try:
         input_vector = vectorizer.transform([processed_input])
         similarity   = cosine_similarity(input_vector, question_vectors)
@@ -83,34 +83,34 @@ def get_response(user_input):
     except Exception:
         score = 0
 
-    if score >= 0.2:                             # ← lowered from 0.3 for wider coverage
+    if score >= 0.2:                             
         return answers[best_idx]
 
-    # ── Step 2: Fuzzy matching fallback ───────────────────────────────────────
+   
     corrected_input = correct_spelling(user_input)
     fuzzy_result    = fuzzy_process.extractOne(
         corrected_input,
         questions,
-        score_cutoff=55                          # ← 55/100 fuzzy threshold
+        score_cutoff=55                        
     )
 
     if fuzzy_result:
         matched_question, fuzzy_score, matched_idx = fuzzy_result
         return answers[matched_idx]
 
-    # ── Step 3: Friendly fallback ─────────────────────────────────────────────
+    
     return (
         "I'm not sure I understood that. Could you rephrase your question? "
         "I can answer questions about Java, OOP, DBMS, DSA, Python, OS, "
-        "Networking, and HR interview topics. 🤔"
+        "Networking, and HR interview topics. "
     )
 
-# ── State ─────────────────────────────────────────────────────────────────────
+
 chat_history      = []
 current_question  = 0
 selected_category = "Java"
 
-# ── Routes ────────────────────────────────────────────────────────────────────
+
 
 @app.route("/", methods=["GET", "POST"])
 def home():
@@ -153,11 +153,11 @@ def interview():
 
             total = len(keywords)
             if score >= max(2, total // 2):
-                feedback = "✅ Great answer! You covered the important concepts well."
+                feedback = " Great answer! You covered the important concepts well."
             elif score == 1:
-                feedback = "⚠️ Good attempt! Try adding more technical depth to your answer."
+                feedback = " Good attempt! Try adding more technical depth to your answer."
             else:
-                feedback = "❌ Keep practising! Review the core concepts and try again."
+                feedback = " Keep practising! Review the core concepts and try again."
 
             current_question = (current_question + 1) % len(current_data)
 
