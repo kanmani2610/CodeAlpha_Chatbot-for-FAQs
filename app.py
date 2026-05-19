@@ -5,165 +5,173 @@ import string
 
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
+from textblob import TextBlob
+from fuzzywuzzy import process as fuzzy_process
+
 from interview_data import categories
 
-# Download NLTK data
+# ── Download NLTK data ────────────────────────────────────────────────────────
 nltk.download('punkt')
 nltk.download('punkt_tab')
 nltk.download('stopwords')
+nltk.download('wordnet')
 
 app = Flask(__name__)
 
-# Load FAQ data
+# ── Load FAQ data ─────────────────────────────────────────────────────────────
 data = pd.read_csv("faq.csv")
 
 questions = data['question'].tolist()
-answers = data['answer'].tolist()
+answers   = data['answer'].tolist()
 
-# Preprocess text
+# ── NLP helpers ───────────────────────────────────────────────────────────────
+lemmatizer = WordNetLemmatizer()
+stop_words = set(stopwords.words('english'))
+
+def correct_spelling(text):
+    """Auto-correct spelling errors using TextBlob."""
+    try:
+        return str(TextBlob(text).correct())
+    except Exception:
+        return text
+
 def preprocess(text):
-
-    text = text.lower()
-
+    """Lowercase → spell-correct → tokenize → remove stopwords/punct → lemmatize."""
+    text   = text.lower()
+    text   = correct_spelling(text)              # ← handles typos like 'plymorphism'
     tokens = word_tokenize(text)
-
     tokens = [
-        word for word in tokens
-        if word not in stopwords.words('english')
+        lemmatizer.lemmatize(word)               # ← 'classes' → 'class', 'methods' → 'method'
+        for word in tokens
+        if word not in stop_words
         and word not in string.punctuation
+        and word.isalpha()                       # ← strips numbers & special chars
     ]
-
     return " ".join(tokens)
 
-# Process FAQ questions
+# ── Build TF-IDF vectors ──────────────────────────────────────────────────────
 processed_questions = [preprocess(q) for q in questions]
 
-# Convert text into vectors
-vectorizer = TfidfVectorizer()
-
+vectorizer       = TfidfVectorizer(ngram_range=(1, 2))   # ← bigrams improve matching
 question_vectors = vectorizer.fit_transform(processed_questions)
 
-# Chatbot response function
+# ── Chatbot response function ─────────────────────────────────────────────────
 def get_response(user_input):
+    """
+    1. Preprocess & spell-correct the input.
+    2. Try TF-IDF cosine similarity (primary).
+    3. Fall back to fuzzy string matching (catches creative spelling).
+    4. Return a helpful fallback message if neither is confident.
+    """
+
+    if not user_input or not user_input.strip():
+        return "Please type a question so I can help you! 😊"
 
     processed_input = preprocess(user_input)
 
-    input_vector = vectorizer.transform([processed_input])
+    # ── Step 1: TF-IDF cosine similarity ──────────────────────────────────────
+    try:
+        input_vector = vectorizer.transform([processed_input])
+        similarity   = cosine_similarity(input_vector, question_vectors)
+        best_idx     = similarity.argmax()
+        score        = similarity[0][best_idx]
+    except Exception:
+        score = 0
 
-    similarity = cosine_similarity(input_vector, question_vectors)
+    if score >= 0.2:                             # ← lowered from 0.3 for wider coverage
+        return answers[best_idx]
 
-    best_match_index = similarity.argmax()
+    # ── Step 2: Fuzzy matching fallback ───────────────────────────────────────
+    corrected_input = correct_spelling(user_input)
+    fuzzy_result    = fuzzy_process.extractOne(
+        corrected_input,
+        questions,
+        score_cutoff=55                          # ← 55/100 fuzzy threshold
+    )
 
-    score = similarity[0][best_match_index]
+    if fuzzy_result:
+        matched_question, fuzzy_score, matched_idx = fuzzy_result
+        return answers[matched_idx]
 
-    if score < 0.3:
-        return "Sorry, I could not understand your question properly."
+    # ── Step 3: Friendly fallback ─────────────────────────────────────────────
+    return (
+        "I'm not sure I understood that. Could you rephrase your question? "
+        "I can answer questions about Java, OOP, DBMS, DSA, Python, OS, "
+        "Networking, and HR interview topics. 🤔"
+    )
 
-    return answers[best_match_index]
-
-# Chat history
-chat_history = []
-
-# Interview question index
-current_question = 0
+# ── State ─────────────────────────────────────────────────────────────────────
+chat_history      = []
+current_question  = 0
 selected_category = "Java"
 
-# Home Route
+# ── Routes ────────────────────────────────────────────────────────────────────
+
 @app.route("/", methods=["GET", "POST"])
 def home():
-
     if request.method == "POST":
+        user_input = request.form.get("message", "").strip()
+        if user_input:
+            response = get_response(user_input)
+            chat_history.append({"user": user_input, "bot": response})
 
-        user_input = request.form["message"]
+    return render_template("index.html", chats=chat_history)
 
-        response = get_response(user_input)
 
-        chat_history.append({
-            "user": user_input,
-            "bot": response
-        })
-
-    return render_template(
-        "index.html",
-        chats=chat_history
-    )
-
-# Clear Chat Route
 @app.route("/clear")
 def clear_chat():
-
     global chat_history
-
     chat_history = []
+    return render_template("index.html", chats=chat_history)
 
-    return render_template(
-        "index.html",
-        chats=chat_history
-    )
 
-# Interview Mode
 @app.route("/interview", methods=["GET", "POST"])
 def interview():
-
-    global current_question
-    global selected_category
+    global current_question, selected_category
 
     feedback = ""
 
     if request.method == "POST":
 
         if "category" in request.form:
-
             selected_category = request.form["category"]
-
-            current_question = 0
+            current_question  = 0
 
         else:
-
-            user_answer = request.form["answer"].lower()
-
+            user_answer  = request.form.get("answer", "").lower()
             current_data = categories[selected_category]
+            keywords     = current_data[current_question]["keywords"]
 
-            keywords = current_data[current_question]["keywords"]
+            # Count keyword matches (whole-word, not substring)
+            answer_words = set(user_answer.split())
+            score = sum(1 for kw in keywords if kw in answer_words)
 
-            score = 0
-
-            for word in keywords:
-
-                if word in user_answer:
-                    score += 1
-
-            if score >= 2:
-
-                feedback = "✅ Great answer! You covered important concepts."
-
+            total = len(keywords)
+            if score >= max(2, total // 2):
+                feedback = "✅ Great answer! You covered the important concepts well."
             elif score == 1:
-
-                feedback = "⚠️ Good attempt, but add more technical depth."
-
+                feedback = "⚠️ Good attempt! Try adding more technical depth to your answer."
             else:
+                feedback = "❌ Keep practising! Review the core concepts and try again."
 
-                feedback = "❌ Try improving your answer with better concepts."
-
-            current_question = (
-                current_question + 1
-            ) % len(current_data)
+            current_question = (current_question + 1) % len(current_data)
 
     current_data = categories[selected_category]
-
-    question = current_data[current_question]["question"]
+    question     = current_data[current_question]["question"]
 
     return render_template(
         "interview.html",
         question=question,
         feedback=feedback,
         categories=categories.keys(),
-        selected_category=selected_category
+        selected_category=selected_category,
     )
+
 
 if __name__ == "__main__":
     app.run(debug=True)
