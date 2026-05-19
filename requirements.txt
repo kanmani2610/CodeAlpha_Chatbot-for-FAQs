@@ -5,3 +5,4 @@ nltk
 textblob        
 fuzzywuzzy      
 python-Levenshtein 
+gunicorn
