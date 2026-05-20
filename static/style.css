@@ -10,27 +10,27 @@ body{
 
     font-family:'Poppins',sans-serif;
 
-    background:#0f172a;
+    background:#000;
 
     color:white;
 
-    height:100vh;
+    min-height:100vh;
 }
 
 .app-container{
 
     display:flex;
 
-    height:100vh;
+    min-height:100vh;
 }
 
-/* SIDEBAR */
+
 
 .sidebar{
 
     width:260px;
 
-    background:#111827;
+    background:#050505;
 
     padding:30px 20px;
 
@@ -45,7 +45,7 @@ body{
 
 .sidebar h2{
 
-    color:#06b6d4;
+    color:#f5f5f5;
 
     margin-bottom:20px;
 
@@ -58,7 +58,7 @@ body{
 
     color:white;
 
-    background:#1e293b;
+    background:#171717;
 
     padding:15px;
 
@@ -71,21 +71,22 @@ body{
 
 .sidebar a:hover{
 
-    background:#06b6d4;
+    background:#2a2a2a;
 
     transform:translateX(5px);
-    .sidebar a:last-child{
+}
 
-    background:#7f1d1d;
+.sidebar a:last-child{
+
+    background:#3a1010;
 }
 
 .sidebar a:last-child:hover{
 
-    background:#dc2626;
-}
+    background:#7f1d1d;
 }
 
-/* CHAT AREA */
+
 
 .chat-container{
 
@@ -95,7 +96,7 @@ body{
 
     flex-direction:column;
 
-    background:linear-gradient(135deg,#0f172a,#1e293b);
+    background:#000;
 }
 
 .chat-header{
@@ -114,7 +115,7 @@ body{
 
 .chat-header p{
 
-    color:#cbd5e1;
+    color:#cfcfcf;
 }
 
 .chat-box{
@@ -141,7 +142,7 @@ body{
 
 .chat-box::-webkit-scrollbar-thumb{
 
-    background:#475569;
+    background:#3f3f46;
 
     border-radius:10px;
 }
@@ -179,12 +180,12 @@ body{
 
     flex-shrink:0;
 
-    background:linear-gradient(135deg,#06b6d4,#3b82f6);
+    background:#2a2a2a;
 }
 
 .user-avatar{
 
-    background:linear-gradient(135deg,#2563eb,#7c3aed);
+    background:#3a3a3a;
 }
 
 .message{
@@ -210,7 +211,7 @@ body{
 
 .user-message{
 
-    background:linear-gradient(135deg,#06b6d4,#0891b2);
+    background:#2f2f2f;
 
     color:white;
 
@@ -219,7 +220,7 @@ body{
 
 .bot-message{
 
-    background:rgba(255,255,255,0.08);
+    background:#111;
 
     border:1px solid rgba(255,255,255,0.06);
 
@@ -228,7 +229,7 @@ body{
     border-bottom-left-radius:6px;
 }
 
-/* INPUT */
+
 
 .input-area{
 
@@ -253,7 +254,7 @@ body{
 
     border-radius:14px;
 
-    background:#1e293b;
+    background:#171717;
 
     color:white;
 
@@ -262,7 +263,7 @@ body{
 
 .input-area input::placeholder{
 
-    color:#94a3b8;
+    color:#a3a3a3;
 }
 
 .input-area button{
@@ -273,9 +274,9 @@ body{
 
     border-radius:14px;
 
-    background:linear-gradient(135deg,#06b6d4,#3b82f6);
+    background:#f5f5f5;
 
-    color:white;
+    color:#000;
 
     font-weight:600;
 
@@ -291,7 +292,7 @@ body{
     opacity:0.92;
 }
 
-/* ANIMATION */
+
 
 @keyframes fadeUp{
 
@@ -310,39 +311,127 @@ body{
     }
 }
 
-/* MOBILE */
+
 
 @media(max-width:768px){
 
+    body{
+
+        height:auto;
+    }
+
+    .app-container{
+
+        flex-direction:column;
+
+        min-height:100vh;
+    }
+
     .sidebar{
 
-        width:90px;
+        width:100%;
 
-        padding:20px 10px;
+        padding:14px;
+
+        flex-direction:row;
+
+        align-items:center;
+
+        gap:10px;
+
+        overflow-x:auto;
+
+        border-right:none;
+
+        border-bottom:1px solid rgba(255,255,255,0.08);
     }
 
     .sidebar h2{
 
-        font-size:1rem;
+        font-size:0.95rem;
+
+        margin-bottom:0;
+
+        white-space:nowrap;
     }
 
     .sidebar a{
 
-        font-size:0.8rem;
+        font-size:0.78rem;
 
-        padding:12px 10px;
+        padding:10px 12px;
 
         text-align:center;
+
+        white-space:nowrap;
+
+        border-radius:10px;
+    }
+
+    .sidebar a:hover{
+
+        transform:none;
+    }
+
+    .chat-container{
+
+        min-height:0;
     }
 
     .chat-header h1{
 
-        font-size:1.5rem;
+        font-size:1.35rem;
+    }
+
+    .chat-header{
+
+        padding:18px 16px;
+    }
+
+    .chat-box{
+
+        padding:16px;
+
+        gap:16px;
     }
 
     .message{
 
-        max-width:85%;
+        max-width:82%;
+
+        padding:12px 14px;
+
+        font-size:0.9rem;
+
+        line-height:1.55;
+    }
+
+    .avatar{
+
+        width:34px;
+
+        height:34px;
+
+        font-size:0.95rem;
+    }
+
+    .input-area{
+
+        padding:14px;
+
+        gap:8px;
+    }
+
+    .input-area input{
+
+        min-width:0;
+
+        padding:12px;
+    }
+
+    .input-area button{
+
+        padding:12px 14px;
     }
 }
 .category-select{
@@ -355,7 +444,7 @@ body{
 
     border-radius:12px;
 
-    background:#1e293b;
+    background:#171717;
 
     color:white;
 
