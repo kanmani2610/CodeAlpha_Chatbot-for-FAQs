@@ -4,7 +4,7 @@ The platform is designed to simulate a beginner-friendly interview preparation e
 
 Project Links
 
-*  Live Demo: https://codealpha-chatbot-for-faqs.onrender.com?utm_source=chatgpt.com
+*  Live Demo: https://codealpha-chatbot-for-faqs.onrender.com
 
 
  Key Features
